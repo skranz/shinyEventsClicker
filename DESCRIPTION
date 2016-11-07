@@ -1,0 +1,11 @@
+Package: shinyEventsClicker
+Type: Package
+Title: Shiny-based clicker app for lectures
+Version: 0.1.0
+Author: Sebastian Kranz
+Maintainer: Sebastian Krant <sebastian.kranz@uni-ulm.de>
+Description: Shiny-based clicker app for lectures
+License: GPL >= 2.0
+LazyData: TRUE
+Depends:
+  restorepoint, shinyEvents, stringtools, rmdtools, yaml
