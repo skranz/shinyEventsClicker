@@ -18,9 +18,7 @@ clickerServerApp = function(main.dir, template.dir=file.path(main.dir, "template
   app$cs = cs
   cs$templ = load.clicker.quiz.templates(cs=cs)
 
-  app$ui = fluidPage(column(width = 10, offset=1,
-    h4("Clicker Server"),
-    selectInput("selTempl", label="Template", choices = names(cs$templ)),
+  mainBox = div(
     aceEditor("quizText", value=cs$templ[[1]]$source_text,showLineNumbers = FALSE,wordWrap = TRUE,mode = "yaml",height = "10em"),
     uiOutput("msgUI"),
     HTML("<table><tr><td>"),
@@ -29,10 +27,30 @@ clickerServerApp = function(main.dir, template.dir=file.path(main.dir, "template
     actionButton("stopBtn",label="Stop in "),
     HTML("</td><td>"),
     tags$input(id = "stopSecInput",type = "text", class = "form-control", value = "5",style="width: 4em;"),
-    HTML("</td></tr></table>"),
+    HTML("</td></tr></table>")
+  )
+
+  resultBox = tagList(
     uiOutput("taskNumSubUI"),
     uiOutput("resultsUI")
-  ))
+  )
+
+
+  app$ui =dashboardPage(
+    dashboardHeader(title = "ShinyClicker"),
+    dashboardSidebar(
+      selectInput("selTempl", label="Template", choices = names(cs$templ))
+),
+    dashboardBody(
+      fluidRow(
+        box(mainBox),
+        box(resultBox)
+      )
+    )
+  )
+
+
+
   selectChangeHandler("selTempl",function(app,...) {
     cs = app$cs
     te = getInputValue("selTempl")

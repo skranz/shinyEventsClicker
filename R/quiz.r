@@ -190,7 +190,7 @@ quiz.ui = function(qu, solution=FALSE) {
   })
   if (!is.null(qu$checkBtnId)) {
     ids = sapply(qu$parts, function(part) part$answerId)
-    pli = c(pli, list(submitButton(qu$checkBtnId,label = "check",form.ids = ids),br()))
+    pli = c(pli, list(submitButton(qu$checkBtnId,label = "Send",form.ids = ids),br()))
   }
 
   withMathJax(pli)
@@ -206,9 +206,9 @@ quiz.part.ui = function(part, solution=FALSE, add.button=!is.null(part$checkBtnI
     } else if (part$type =="text") {
       answer = textInput(part$answerId, label = NULL,value = part$answer)
     } else if (part$type=="mc") {
-      answer = checkboxGroupInput(part$answerId, label=NULL,part$choices,selected = part$answer)
+      answer = wellCheckboxGroupInput(part$answerId, label=NULL,part$choices,selected = part$answer,width = "100%")
     } else if (part$type=="sc") {
-      answer = radioButtons(part$answerId, label=NULL,part$choices, selected=part$answer)
+      answer = wellRadioButtons(part$answerId, label=NULL,part$choices, selected=part$answer, width="100%")
     }
     #setUI(part$resultId,HTML(part$success))
 
@@ -218,14 +218,14 @@ quiz.part.ui = function(part, solution=FALSE, add.button=!is.null(part$checkBtnI
     } else if (part$type =="text") {
       answer = textInput(part$answerId, label = NULL,value = "")
     } else if (part$type=="mc") {
-      answer = checkboxGroupInput(part$answerId, label=NULL,part$choices)
+      answer = wellCheckboxGroupInput(part$answerId, label=NULL,part$choices)
     } else if (part$type=="sc") {
-      answer = radioButtons(part$answerId, label=NULL,part$choices, selected=NA)
+      answer = wellRadioButtons(part$answerId, label=NULL,part$choices, selected=NA)
     }
   }
 
   if (add.button) {
-    button = submitButton(part$checkBtnId,label = "check", form.ids = part$answerId)
+    button = submitButton(part$checkBtnId,label = "Send", form.ids = part$answerId)
   } else {
     button = NULL
   }
