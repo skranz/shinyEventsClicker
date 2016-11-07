@@ -49,20 +49,14 @@ clickerClientApp = function(main.dir) {
     uiOutput("mainUI")
   )
   appInitHandler(function(...,app=getApp()) {
-    app$userid = "testuser"
+    app$userid = random.string(1,nchar=14)
     glob = app$glob
     rv = glob$rv
     app$task.obs = observe({
       rv$task.nonce
+      restore.point("app.task.observer")
+      clicker.update.client.task()
       cat("task.nonce changed...")
-      if (!is.null(glob$ct)) {
-        restore.point("zddbfhdbfdk")
-
-        ct = glob$ct
-        ct$init.handler()
-        setUI("mainUI", ct$ui)
-
-      }
     })
   }
 
@@ -71,6 +65,18 @@ clickerClientApp = function(main.dir) {
 }
 
 .glob.obs.env = new.env()
+
+clicker.update.client.task = function(ct = app$glob$ct, app=getApp()) {
+  restore.point("clicker.update.client.task")
+
+  if (is.null(ct)) return()
+  if (is.function(ct$init.handler)) {
+    ct$init.handler(ct)
+  } else if (is.character(ct$init.handler)) {
+    do.call(ct$init.handler, list(ct=ct))
+  }
+  setUI("mainUI", ct$ui)
+}
 
 clicker.update.tasks = function(main.dir, glob, app=getApp(), millis=1000) {
   restore.point("clicker.update.tasks")
@@ -128,7 +134,7 @@ clicker.submit = function(values, app=getApp()) {
     writeLines(paste0(names(vals), collapse=","),file.path(ct$sub.dir,"colnames.csv"))
   }
 
-  sub.file = file.path(ct$sub.dir, paste0(userid,".sub"))
+  sub.file = file.path(ct$sub.dir, paste0(userid,"_",ct$task.id,".sub"))
   write.table(as.data.frame(vals), file=sub.file, sep=",", row.names=FALSE, col.names= FALSE)
   glob$ct$num.sub = ct$num.sub+1
 
@@ -141,6 +147,11 @@ import.task.file = function(file, glob) {
   ct$file = file
   ct$num.sub = 0
   ct$sub.dir = file.path(glob$main.dir,"sub", ct$task.id)
+
+  if (isTRUE(ct$type=="quiz")) {
+    ct$ui = quiz.ui(ct$qu)
+    ct$init.handler="clicker.quiz.handlers"
+  }
   ct
 
 }

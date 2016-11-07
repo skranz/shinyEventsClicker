@@ -31,7 +31,7 @@ clickerServerApp = function(main.dir, template.dir=file.path(main.dir, "template
     tags$input(id = "stopSecInput",type = "text", class = "form-control", value = "5",style="width: 4em;"),
     HTML("</td></tr></table>"),
     uiOutput("taskNumSubUI"),
-    uiOutput("taskPlotUI")
+    uiOutput("resultsUI")
   ))
   selectChangeHandler("selTempl",function(app,...) {
     cs = app$cs
@@ -61,7 +61,7 @@ parse.and.send.quiz.task = function(yaml, app=getApp()) {
   restore.point("parse.and.send.quiz.task")
 
   cs = app$cs
-  ct = try(clickerQuiz(yaml = yaml))
+  ct = try(as.environment(clickerQuiz(yaml = yaml)))
   if (is(ct,"try-error")) {
     setUI("msgUI",p(as.character(ct)))
     return()
@@ -133,13 +133,44 @@ start.server.task.observer = function(ct=cs$ct,cs=app$cs,app=getApp()) {
 }
 
 show.task.results = function(cs=app$cs, ct=cs$ct, app=getApp(),...) {
+  dat = load.sub.data(cs=cs,ct=ct)
   restore.point("show.task.results")
 
+  if (is.null(dat)) {
+    ui = p("No answers submitted.")
+    setUI("resultsUI",ui)
+    return()
+  }
+
+  qu = ct$qu
+  ui = tagList(
+    div(style="width=15em",
+      plotOutput("resultsPlot")
+    )
+  )
+  setUI("resultsUI",ui)
+  setPlot("resultsPlot",quiz.results.plot(dat, qu=qu))
+}
+
+load.sub.data = function(cs=app$cs, ct=cs$ct, app=getApp(),...) {
+  restore.point("load.sub.data")
+  dir = file.path(cs$main.dir, "sub",ct$task.id)
+  files = list.files(dir,pattern = glob2rx("*.sub"),full.names = TRUE)
+  if (length(files)==0) return(NULL)
+
+
+  header.file = file.path(dir,"colnames.csv")
+  txt = readLines(header.file,warn = FALSE)
+  li = unlist(lapply(files, readLines,warn=FALSE))
+  txt = c(txt, li)
+
+  dat = readr::read_csv(merge.lines(txt))
+  dat
 }
 
 write.clicker.task = function(ct,main.dir,file = random.string(nchar = 20)) {
   long.file = file.path(main.dir,"tasks",file)
-  saveRDS(ct, long.file, compress=FALSE)
+  saveRDS(as.list(ct), long.file, compress=FALSE)
 }
 
 examples.import.yaml.with.source = function() {

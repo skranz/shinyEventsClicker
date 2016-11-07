@@ -76,10 +76,9 @@ clickerQuiz = function(id=paste0("quiz_",sample.int(10e10,1)),qu=NULL, yaml, qui
   qu
 
   ct = list(
+    type = "quiz",
     course.id = course.id,
     task.id = task.id,
-    ui = qu$ui,
-    init.handler = clicker.quiz.handlers(qu=qu),
     qu = qu
   )
   ct
@@ -273,18 +272,14 @@ submitButton = function (inputId, label, icon = NULL, width = NULL, form.ids = N
   actionButton(inputId,label,icon, width, "data-form-selector"=form.sel)
 }
 
-clicker.quiz.handlers = function(qu){
+clicker.quiz.handlers = function(ct=NULL,qu=ct$qu){
   #restore.point("clicker.quiz.handlers")
+  buttonHandler(qu$checkBtnId, function(...) {
+    part = qu$parts[[1]]
+    answer = getInputValue(part$answerId)
 
-  fun = function(...) {
-    buttonHandler(qu$checkBtnId, function(...) {
-      part = qu$parts[[1]]
-      answer = getInputValue(part$answerId)
-
-      clicker.submit(values=list(answer=answer))
-    })
-  }
-  fun
+    clicker.submit(values=list(answer=answer))
+  })
 }
 
 check.part.answer = function(part.ind,qu, answer) {
