@@ -125,9 +125,6 @@ clicker.submit = function(values, app=getApp()) {
   ct = glob$ct
   vals = c(list(submitTime=Sys.time(), userid=app$userid), as.list(values))
 
-  file = glob$ct$sub.path
-
-
   # first submission
   if (ct$num.sub==0) {
     dir.create(ct$sub.dir)

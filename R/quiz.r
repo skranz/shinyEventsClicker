@@ -31,21 +31,11 @@ quizDefaults = function(lang="en") {
 #'        The boolean argument solved is TRUE if the quiz was solved
 #'        and otherwise FALSE
 clickerQuiz = function(id=paste0("quiz_",sample.int(10e10,1)),qu=NULL, yaml, quiz.handler=NULL, add.handler=TRUE, defaults=quizDefaults(lang=lang), lang="en", whiskers=NULL, task.id=id, course.id="default") {
-  restore.point("shinyQuiz")
+  restore.point("clickerQuiz")
 
   if (is.null(qu)) {
     yaml = enc2utf8(yaml)
-
-    yaml = sep.lines(yaml)
-    sep = which(str.trim(yaml)=="---")
-    if (length(sep)>0) {
-      rows = (sep+1):(length(yaml)-1)
-      if (rows[2]<rows[1]) rows = integer()
-      blocks.txt = yaml[rows]
-      yaml = yaml[1:(sep-1)]
-    }
-    yaml = merge.lines(yaml)
-    qu = try(mark_utf8(import.yaml(text=yaml)), silent=TRUE)
+    qu = try(mark_utf8(parse.hashdot.yaml(txt=yaml)), silent=TRUE)
 
     if (is(qu,"try-error")) {
       err = paste0("When importing quiz:\n",paste0(yaml, collapse="\n"),"\n\n",as.character(qu))
@@ -60,6 +50,8 @@ clickerQuiz = function(id=paste0("quiz_",sample.int(10e10,1)),qu=NULL, yaml, qui
     qu$parts = list(qu)
   }
 
+  if (!is.null(qu$explain))
+    qu$explain.html = md2html(qu$explain)
 
   qu$checkBtnId = paste0(qu$id,"__checkBtn")
   qu$parts = lapply(seq_along(qu$parts), function(ind) init.quiz.part(qu$parts[[ind]],ind,qu,whiskers=whiskers))
@@ -82,10 +74,6 @@ clickerQuiz = function(id=paste0("quiz_",sample.int(10e10,1)),qu=NULL, yaml, qui
     qu = qu
   )
   ct
-}
-
-clickerQuizTask = function(...) {
-
 }
 
 init.quiz.part = function(part=qu$parts[[part.ind]], part.ind=1, qu, defaults=quizDefaults(), whiskers=list()) {

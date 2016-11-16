@@ -6,7 +6,7 @@ examples.click.server = function() {
 }
 
 
-clickerServerApp = function(main.dir, template.dir=file.path(main.dir, "templates")) {
+clickerServerApp = function(main.dir, template.dir=file.path(main.dir, "templates"), userid="default") {
   restore.point("clickerServerApp")
 
   library(shinyAce)
@@ -18,15 +18,19 @@ clickerServerApp = function(main.dir, template.dir=file.path(main.dir, "template
   app$cs = cs
   cs$templ = load.clicker.quiz.templates(cs=cs)
 
+  headerBox = tagList(
+
+  )
+
   mainBox = div(
     aceEditor("quizText", value=cs$templ[[1]]$source_text,showLineNumbers = FALSE,wordWrap = TRUE,mode = "yaml",height = "10em"),
     uiOutput("msgUI"),
     HTML("<table><tr><td>"),
-    actionButton("sendBtn",label="Send"),
+    smallButton("sendBtn",label="Send"),
     HTML("</td><td>"),
-    actionButton("stopBtn",label="Stop in "),
+    smallButton("stopBtn",label="Stop in "),
     HTML("</td><td>"),
-    tags$input(id = "stopSecInput",type = "text", class = "form-control", value = "5",style="width: 4em;"),
+    tags$input(id = "stopSecInput",type = "text", class = "form-control", value = "2",style="width: 4em; padding-left: 5px; padding-right: 5px; padding-top: 0; padding-bottom: 0; margin-left: 2px; margin-top:0; margin-bottom: 0;"),
     HTML("</td></tr></table>")
   )
 
@@ -71,8 +75,22 @@ clickerServerApp = function(main.dir, template.dir=file.path(main.dir, "template
   })
 
   appInitHandler(function(...,app=getApp()) {
+    cs = as.environment(as.list(app$cs))
+    app$cs = cs
+    init.app.presenter(userid=userid,cs=cs)
+
   })
   app
+}
+
+
+init.app.presenter = function(userid, cs = app$cs, app=getApp()) {
+  restore.point("init.app.presenter")
+  cs$userid = userid
+  cs$user.dir = file.path(cs$main.dir, "presenters",userid)
+  cs$courses.dir = file.path(cs$user.dir,"courses")
+  courses = list.dirs(cs$courses.dir)
+
 }
 
 parse.and.send.quiz.task = function(yaml, app=getApp()) {
@@ -125,14 +143,14 @@ start.server.task.observer = function(ct=cs$ct,cs=app$cs,app=getApp()) {
 
     dir = file.path(cs$main.dir, "sub",ct$task.id)
     files = list.files(dir)
-    cs$num.sub = length(files)
+    cs$num.sub = max(0,length(files)-1)
     if (!is.null(cs$stop.time)) {
       cs$stop.in.sec = round(cs$stop.time - as.integer(Sys.time()))
       cs$stopped = cs$stop.in.sec < 0
       if (!cs$stopped) {
-        stop.tag = h4(style="color: #d00",paste0("Stop in ", cs$stop.in.sec, " sec."))
+        stop.tag = p(style="color: #d00",paste0("Stop in ", cs$stop.in.sec, " sec."))
       } else {
-        stop.tag = h4("Submission has stopped.")
+        stop.tag = p("Submission has stopped.")
       }
     } else {
       stop.tag = NULL
@@ -140,7 +158,7 @@ start.server.task.observer = function(ct=cs$ct,cs=app$cs,app=getApp()) {
     setUI("taskNumSubUI",tagList(
       stop.tag,
       h4(paste0("Running: ", round(as.integer(Sys.time())-cs$start.time))),
-      h4(paste0("Submitted Answers: ", cs$num.sub))
+      h4(paste0("Replies: ", cs$num.sub))
     ))
     if (!cs$stopped) {
       invalidateLater(1000)
@@ -150,49 +168,11 @@ start.server.task.observer = function(ct=cs$ct,cs=app$cs,app=getApp()) {
   })
 }
 
-show.task.results = function(cs=app$cs, ct=cs$ct, app=getApp(),...) {
-  dat = load.sub.data(cs=cs,ct=ct)
-  restore.point("show.task.results")
-
-  if (is.null(dat)) {
-    ui = p("No answers submitted.")
-    setUI("resultsUI",ui)
-    return()
-  }
-
-  qu = ct$qu
-  ui = tagList(
-    div(style="width=15em",
-      plotOutput("resultsPlot")
-    )
-  )
-  setUI("resultsUI",ui)
-  setPlot("resultsPlot",quiz.results.plot(dat, qu=qu))
-}
-
-load.sub.data = function(cs=app$cs, ct=cs$ct, app=getApp(),...) {
-  restore.point("load.sub.data")
-  dir = file.path(cs$main.dir, "sub",ct$task.id)
-  files = list.files(dir,pattern = glob2rx("*.sub"),full.names = TRUE)
-  if (length(files)==0) return(NULL)
-
-
-  header.file = file.path(dir,"colnames.csv")
-  txt = readLines(header.file,warn = FALSE)
-  li = unlist(lapply(files, readLines,warn=FALSE))
-  txt = c(txt, li)
-
-  dat = readr::read_csv(merge.lines(txt))
-  dat
-}
-
 write.clicker.task = function(ct,main.dir,file = random.string(nchar = 20)) {
+  restore.point("write.clicker.task")
+
   long.file = file.path(main.dir,"tasks",file)
   saveRDS(as.list(ct), long.file, compress=FALSE)
-}
-
-examples.import.yaml.with.source = function() {
-
 }
 
 import.yaml.with.source = function(txt=readLines(file, warn=FALSE), file=NULL, source.field = "source_text", add.head=TRUE, tab.len=2) {

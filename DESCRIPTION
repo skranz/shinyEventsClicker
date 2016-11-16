@@ -8,4 +8,5 @@ Description: Shiny-based clicker app for lectures
 License: GPL >= 2.0
 LazyData: TRUE
 Depends:
-  restorepoint, shinyEvents, stringtools, rmdtools, yaml, shinyEventsUI, shinydashboard
+  restorepoint, shinyEvents, stringtools, rmdtools, yaml,
+  shinyEventsUI, shinydashboard, highcharter
