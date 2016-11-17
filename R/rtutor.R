@@ -141,7 +141,7 @@ rt.clicker.quiz.parse = function(inner.txt,type="quiz",name="",id=paste0("quiz_"
       slimCollapsePanel("Results", uiOutput(qu$resultsUIId))
     )
   )
-  qu$ct = clickerQuiz(id=id,yaml = inner.txt)
+  qu$ct = clickerQuiz(id=id,yaml = inner.txt, whiskers=whiskers)
 
 
   qu
