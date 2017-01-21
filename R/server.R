@@ -1,6 +1,6 @@
 examples.click.server = function() {
   main.dir = "D:/libraries/shinyEventsClicker/apps/clickerapp"
-  app = clickerServerApp(main.dir=main.dir)
+  app = clickerServerApp(main.dir=main.dir,userid="skranz")
   viewApp(app)
 
 }
@@ -39,16 +39,28 @@ clickerServerApp = function(main.dir, template.dir=file.path(main.dir, "template
     uiOutput("resultsUI")
   )
 
+  manageBox = tagList(
+    tabsetPanel(
+      tabPanel("Send Links",
+        textAreaInput("linkEmailArea",label="Emails",cols = 8),
+        smallButton("sendLinksBtn","Send Links")
+      )
+    )
+  )
 
   app$ui =dashboardPage(
     dashboardHeader(title = "ShinyClicker"),
     dashboardSidebar(
+      selectInput("selCourse", label="Course",choices=NULL),
+      textInput("newCourse",label="New Course",value = ""),
+      actionButton("addCourseBtn","Add course"),
       selectInput("selTempl", label="Template", choices = names(cs$templ))
 ),
     dashboardBody(
       fluidRow(
         box(mainBox),
-        box(resultBox)
+        box(resultBox),
+        box(manageBox)
       )
     )
   )
@@ -88,16 +100,36 @@ init.app.presenter = function(userid, cs = app$cs, app=getApp()) {
   restore.point("init.app.presenter")
   cs$userid = userid
   cs$user.dir = file.path(cs$main.dir, "presenters",userid)
+  if (!dir.exists(cs$user.dir))
+    try(dir.create(cs$user.dir))
   cs$courses.dir = file.path(cs$user.dir,"courses")
-  courses = list.dirs(cs$courses.dir)
+
+  if (!dir.exists(cs$courses.dir))
+    try(dir.create(cs$courses.dir))
+
+  cs$courses = list.dirs(cs$courses.dir, full.names=FALSE)
+
+  if (cs$courses=="") {
+    cs$courses = "default"
+    try(dir.create(file.path(cs$courses.dir,"default")))
+  }
+
+  cs$courseid = cs$courses[1]
+
+  updateSelectInput(app$session,inputId = "selCourse",choices = cs$courses)
 
 }
 
 parse.and.send.quiz.task = function(yaml, app=getApp()) {
   restore.point("parse.and.send.quiz.task")
 
+  # for security don't offer all fields
+  qu = yaml.load(yaml)
+  fields = c("question","sc","mc","answer")
+  qu = qu[fields]
+
   cs = app$cs
-  ct = try(as.environment(clickerQuiz(yaml = yaml)))
+  ct = try(as.environment(clickerQuiz(qu=qu)))
   if (is(ct,"try-error")) {
     setUI("msgUI",p(as.character(ct)))
     return()
@@ -105,7 +137,7 @@ parse.and.send.quiz.task = function(yaml, app=getApp()) {
     setUI("msgUI",p(paste0("Task sent to users. TaskId: ", ct$task.id)))
   }
   cs$ct = ct
-  write.clicker.task(ct, main.dir=app$cs$main.dir)
+  write.clicker.task(ct=ct, main.dir=app$cs$main.dir,cs=cs)
   start.server.task.observer(cs=cs)
 }
 
@@ -168,7 +200,17 @@ start.server.task.observer = function(ct=cs$ct,cs=app$cs,app=getApp()) {
   })
 }
 
-write.clicker.task = function(ct,main.dir,file = random.string(nchar = 20)) {
+clicker.task.file.name = function(ct=NULL,userid=cs$userid,courseid=cs$courseid,ps.name=NULL, base.name = random.string(nchar = 20), cs=NULL) {
+  restore.point("clicker.task.file.name")
+
+  file = base.name
+  if (!is.null(ps.name)) file = paste0("p",ps.name,".",file)
+  if (!is.null(courseid)) file = paste0("c",courseid,".",file)
+  if (!is.null(userid)) file = paste0("u",userid,".",file)
+  file
+}
+
+write.clicker.task = function(ct,main.dir,file = clicker.task.file.name(ct=ct,cs=cs),cs=NULL) {
   restore.point("write.clicker.task")
 
   long.file = file.path(main.dir,"tasks",file)

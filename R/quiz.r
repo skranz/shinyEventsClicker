@@ -30,7 +30,7 @@ quizDefaults = function(lang="en") {
 #' @param quiz.handler a function that will be called if the quiz is checked.
 #'        The boolean argument solved is TRUE if the quiz was solved
 #'        and otherwise FALSE
-clickerQuiz = function(id=paste0("quiz_",sample.int(10e10,1)),qu=NULL, yaml, quiz.handler=NULL, add.handler=TRUE, defaults=quizDefaults(lang=lang), lang="en", whiskers=NULL, task.id=id, course.id="default") {
+clickerQuiz = function(id=paste0("quiz_",sample.int(10e10,1)),qu=NULL, yaml, quiz.handler=NULL, add.handler=TRUE, defaults=quizDefaults(lang=lang), lang="en", whiskers=NULL, task.id=id) {
   restore.point("clickerQuiz")
 
   if (is.null(qu)) {
@@ -69,7 +69,6 @@ clickerQuiz = function(id=paste0("quiz_",sample.int(10e10,1)),qu=NULL, yaml, qui
 
   ct = list(
     type = "quiz",
-    course.id = course.id,
     task.id = task.id,
     qu = qu
   )

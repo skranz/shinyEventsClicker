@@ -9,4 +9,4 @@ License: GPL >= 2.0
 LazyData: TRUE
 Depends:
   restorepoint, shinyEvents, stringtools, rmdtools, yaml,
-  shinyEventsUI, shinydashboard, highcharter
+  shinyEventsUI, shinydashboard, highcharter, shinyEventsLogin

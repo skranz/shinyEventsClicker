@@ -1,4 +1,6 @@
 
+
+
 # blocks specified in RTutor
 shinyEventsClicker.block.types.df = function(...) {
   restore.point("shinyEventsClicker.block.types.df")
@@ -9,6 +11,8 @@ shinyEventsClicker.block.types.df = function(...) {
 
   bt.df
 }
+
+
 
 
 rtutor.widget.quiz = function() {
@@ -48,14 +52,22 @@ rt.clicker.quiz.init.handlers = function(wid=ts$wid,ps=get.ps(), app=getApp(),ts
     cs$stop.time = as.integer(Sys.time()) + stop.in.sec
   })
 
+  # set course running for clicker
+  if (!isTRUE(ps[["wrote.clicker.running"]])) {
+    ps$wrote.clicker.running = TRUE
+    write.clicker.running(courseid = opts$course, userid=ps$user.name,clicker.dir = opts$clicker.dir)
+  }
+
 
   #add.quiz.handlers(qu=wid, quiz.handler=rtutor.quiz.handler)
 }
 
 
 
-rt.clicker.send = function(ts=NULL, wid=ts$wid, ct=wid$ct, cs=ts$cs, opts=NULL, app=getApp()) {
+rt.clicker.send = function(ts=NULL, wid=ts$wid, ct=wid$ct, cs=ts$cs, opts=rt.opts(), app=getApp()) {
   restore.point("rt.clicker.quiz.send")
+
+  ct$courseid = opts$course
   write.clicker.task(ct, main.dir=opts$clicker.dir)
   rt.clicker.start.task.observer(ts=ts,cs=cs, wid=wid, ct=ct, opts=opts)
 }
